@@ -3,6 +3,7 @@
     "strict": true,
     "moduleResolution": "bundler",
     "target": "ES2022",
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@chat/*": ["packages/*/src"],
