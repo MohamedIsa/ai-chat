@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity } from "react-native";
+import { StyleSheet, View, TouchableOpacity, Platform } from "react-native";
 import { Link, router } from "expo-router";
 import { TextInput as PaperTextInput } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -95,18 +95,20 @@ export default function LoginScreen() {
             <View style={[styles.dividerLine, { backgroundColor: palette.border }]} />
           </View>
 
-          <Button
-            fullWidth
-            mode="outlined"
-            icon={({ size, color }) => (
-              <MaterialCommunityIcons name="apple" size={size} color={color} />
-            )}
-            textColor={palette.text}
-            style={[styles.socialBtn, { borderColor: palette.border }]}
-            contentStyle={styles.socialContent}
-          >
-            Continue with Apple
-          </Button>
+          {Platform.OS === "ios" && (
+            <Button
+              fullWidth
+              mode="outlined"
+              icon={({ size, color }) => (
+                <MaterialCommunityIcons name="apple" size={size} color={color} />
+              )}
+              textColor={palette.text}
+              style={[styles.socialBtn, { borderColor: palette.border }]}
+              contentStyle={styles.socialContent}
+            >
+              Continue with Apple
+            </Button>
+          )}
           <Button
             fullWidth
             mode="outlined"
