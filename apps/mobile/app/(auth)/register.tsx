@@ -1,27 +1,28 @@
-import { StyleSheet, View, TouchableOpacity } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Link, router } from "expo-router";
 import { TextInput as PaperTextInput } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Screen } from "@/components/layout";
 import { Button, useSnackbar } from "@/components/ui";
 import { FormField } from "@/components/forms";
-import { Title, Text, Caption } from "@/components/typography";
+import { Title, Text } from "@/components/typography";
 import { useAuthForm } from "@/hooks/useAuthForm";
-import { loginSchema } from "@/validation/auth";
-import type { LoginInput } from "@/validation/auth";
+import { registerSchema } from "@/validation/auth";
+import type { RegisterInput } from "@/validation/auth";
 import { palette } from "@/theme";
 import { supabase } from "@/lib/supabase";
 import { mapAuthError } from "@/lib/authErrors";
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const { show } = useSnackbar();
 
-  const { control, errors, handleSubmit, isLoading } = useAuthForm<LoginInput>({
-    schema: loginSchema,
+  const { control, errors, handleSubmit, isLoading } = useAuthForm<RegisterInput>({
+    schema: registerSchema,
     onSubmit: async (data) => {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
+        options: { data: { name: data.name } },
       });
       if (error) throw error;
       router.replace("/(app)/conversations");
@@ -33,7 +34,7 @@ export default function LoginScreen() {
   });
 
   return (
-    <Screen centered scrollable={false} style={styles.screen}>
+    <Screen scrollable style={styles.screen} contentContainerStyle={styles.scroll}>
       <View style={styles.inner}>
         <View style={styles.logoWrap}>
           <View style={styles.logoMark}>
@@ -42,14 +43,23 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.heading}>
-          <Title style={styles.title}>Welcome back</Title>
+          <Title style={styles.title}>Create account</Title>
           <Text style={[styles.subtitle, { color: palette.textSecondary }]}>
-            Sign in to AI Chat
+            Start chatting with AI today
           </Text>
         </View>
 
         <View style={styles.form}>
-          <FormField<LoginInput>
+          <FormField<RegisterInput>
+            name="name"
+            control={control}
+            label="Full name"
+            error={errors.name}
+            autoComplete="name"
+            returnKeyType="next"
+            left={<PaperTextInput.Icon icon="account-outline" />}
+          />
+          <FormField<RegisterInput>
             name="email"
             control={control}
             label="Email"
@@ -59,23 +69,27 @@ export default function LoginScreen() {
             returnKeyType="next"
             left={<PaperTextInput.Icon icon="email-outline" />}
           />
-          <FormField<LoginInput>
+          <FormField<RegisterInput>
             name="password"
             control={control}
             label="Password"
             error={errors.password}
             secureTextEntry
-            autoComplete="current-password"
-            returnKeyType="done"
-            onSubmitEditing={handleSubmit}
+            autoComplete="new-password"
+            returnKeyType="next"
             left={<PaperTextInput.Icon icon="lock-outline" />}
           />
-
-          <TouchableOpacity style={styles.forgot} hitSlop={8}>
-            <Link href="/(auth)/forgot-password">
-              <Caption style={{ color: palette.accent }}>Forgot password?</Caption>
-            </Link>
-          </TouchableOpacity>
+          <FormField<RegisterInput>
+            name="confirmPassword"
+            control={control}
+            label="Confirm password"
+            error={errors.confirmPassword}
+            secureTextEntry
+            autoComplete="new-password"
+            returnKeyType="done"
+            onSubmitEditing={handleSubmit}
+            left={<PaperTextInput.Icon icon="lock-check-outline" />}
+          />
 
           <Button
             fullWidth
@@ -86,46 +100,14 @@ export default function LoginScreen() {
             contentStyle={styles.ctaContent}
             labelStyle={styles.ctaLabel}
           >
-            Continue
-          </Button>
-
-          <View style={styles.divider}>
-            <View style={[styles.dividerLine, { backgroundColor: palette.border }]} />
-            <Caption style={[styles.dividerText, { color: palette.textTertiary }]}>or</Caption>
-            <View style={[styles.dividerLine, { backgroundColor: palette.border }]} />
-          </View>
-
-          <Button
-            fullWidth
-            mode="outlined"
-            icon={({ size, color }) => (
-              <MaterialCommunityIcons name="apple" size={size} color={color} />
-            )}
-            textColor={palette.text}
-            style={[styles.socialBtn, { borderColor: palette.border }]}
-            contentStyle={styles.socialContent}
-          >
-            Continue with Apple
-          </Button>
-          <Button
-            fullWidth
-            mode="outlined"
-            icon={({ size, color }) => (
-              <MaterialCommunityIcons name="google" size={size} color={color} />
-            )}
-            textColor={palette.text}
-            style={[styles.socialBtn, { borderColor: palette.border }]}
-            contentStyle={styles.socialContent}
-            onPress={() => show("Google sign-in coming soon", { type: "info" })}
-          >
-            Continue with Google
+            Create account
           </Button>
         </View>
 
         <View style={styles.footer}>
-          <Text style={{ color: palette.textSecondary }}>Don't have an account? </Text>
-          <Link href="/(auth)/register">
-            <Text style={{ color: palette.accent, fontWeight: "600" }}>Sign up</Text>
+          <Text style={{ color: palette.textSecondary }}>Already have an account? </Text>
+          <Link href="/(auth)/login">
+            <Text style={{ color: palette.accent, fontWeight: "600" }}>Sign in</Text>
           </Link>
         </View>
       </View>
@@ -135,6 +117,7 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   screen: { backgroundColor: palette.background },
+  scroll: { flexGrow: 1, padding: 0 },
   inner: { flex: 1, paddingHorizontal: 24, paddingVertical: 48, gap: 0 },
 
   logoWrap: { alignItems: "center", marginBottom: 32 },
@@ -149,16 +132,8 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 15 },
 
   form: { gap: 14 },
-  forgot: { alignSelf: "flex-end", marginTop: -4 },
   ctaContent: { height: 52 },
   ctaLabel: { fontSize: 16, fontWeight: "600", letterSpacing: 0.1 },
-
-  divider: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 4 },
-  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth },
-  dividerText: { fontSize: 13 },
-
-  socialBtn: { borderRadius: 10 },
-  socialContent: { height: 48 },
 
   footer: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 32 },
 });
